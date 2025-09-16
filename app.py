@@ -8,7 +8,7 @@ import pandas as pd
 def enviar_conversao_rdstation(name, email, company, job_title, application_type):
     """
     Envia um evento de conversão para o RD Station Marketing.
-    Retorna True se for bem-sucedido, False caso contrário.
+    VERSÃO DE TESTE: Enviando apenas o e-mail para isolar o problema.
     """
     try:
         api_token = st.secrets["rdstation_api_token"]
@@ -16,20 +16,20 @@ def enviar_conversao_rdstation(name, email, company, job_title, application_type
         st.error("Token da API do RD Station não encontrado. Verifique o arquivo secrets.toml.")
         return False
 
-    conversion_identifier = "acesso_calculadora_isolamento" # Identificador do evento na RD
+    conversion_identifier = "acesso_calculadora_isolamento_teste"
     
+    # --- PAYLOAD DE TESTE MINIMALISTA ---
     payload = {
         "event_type": "CONVERSION",
         "event_family": "CDP",
         "payload": {
             "conversion_identifier": conversion_identifier,
-            "name": name,
-            "email": email,
-            "company": company,
-            "job_title": job_title,
-            # --- ALTERAÇÃO REALIZADA AQUI ---
-            # Atualizado com o identificador correto da sua conta RD Station.
-            "cf_aplicacao_de_interesse": application_type 
+            "email": email
+            # Outros campos foram comentados para o teste
+            # "name": name,
+            # "company": company,
+            # "job_title": job_title,
+            # "cf_aplicacao_de_interesse": application_type
         }
     }
     
@@ -355,6 +355,7 @@ else:
     st.markdown("""
     > **Nota:** Os cálculos são realizados de acordo com as práticas recomendadas pelas normas **ASTM C680** e **ISO 12241**, em conformidade com os procedimentos da norma brasileira **ABNT NBR 16281**.
     """)
+
 
 
 
