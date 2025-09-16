@@ -27,8 +27,9 @@ def enviar_conversao_rdstation(name, email, company, job_title, application_type
             "email": email,
             "company": company,
             "job_title": job_title,
-            # IMPORTANTE: Crie campos personalizados no RD Station para receber estes dados
-            "cf_tipo_de_aplicacao_interesse": application_type 
+            # --- ALTERAÇÃO REALIZADA AQUI ---
+            # Atualizado com o identificador correto da sua conta RD Station.
+            "cf_aplicacao_de_interesse": application_type 
         }
     }
     
@@ -72,7 +73,6 @@ sigma = 5.67e-8
 
 # --- BANCO DE DADOS INTERNO DE ISOLANTES ---
 def carregar_isolantes_local():
-    # ... (O conteúdo desta função permanece o mesmo)
     dados_isolantes = [
         {"nome": "Manta de fibra cerâmica 96kg/m³ até 1260°C", "k_func": "0.0317 * math.exp(0.0024 * T)", "T_min": 25, "T_max": 1260},
         {"nome": "Manta de fibra cerâmica 128kg/m³ até 1260°C", "k_func": "0.0349 * math.exp(0.0021 * T)", "T_min": 25, "T_max": 1260},
@@ -91,7 +91,6 @@ def carregar_isolantes_local():
 
 # --- FUNÇÕES DE CÁLCULO ---
 def calcular_k(k_func_str, T_media):
-    # ... (O conteúdo desta função permanece o mesmo)
     try:
         k_func_safe = str(k_func_str).replace(',', '.')
         return eval(k_func_safe, {"math": math, "T": T_media})
@@ -100,7 +99,6 @@ def calcular_k(k_func_str, T_media):
         return None
 
 def calcular_h_conv(Tf, To, wind_speed_ms=0):
-    # ... (O conteúdo desta função permanece o mesmo)
     if wind_speed_ms >= 1.0:
         Tf_K, To_K = Tf + 273.15, To + 273.15
         T_film_K = (Tf_K + To_K) / 2
@@ -124,27 +122,34 @@ def calcular_h_conv(Tf, To, wind_speed_ms=0):
         return h
 
 def encontrar_temperatura_face_fria(Tq, To, L_total, k_func_str, emissividade, wind_speed_ms=0):
-    # ... (O conteúdo desta função permanece o mesmo, com fator de segurança)
     Tf = To + 10.0
     max_iter, step, min_step, tolerancia = 1000, 50.0, 0.001, 0.5
     erro_anterior = None
+    
     for i in range(max_iter):
         T_media = (Tq + Tf) / 2
         k = calcular_k(k_func_str, T_media)
         if k is None or k <= 0: return None, None, False
-        fator_seguranca = 1.1 # Fator de segurança de 10%
-        q_conducao = (k * (Tq + Tf) / L_total) * fator_seguranca
+
+        # --- ALTERAÇÃO REALIZADA AQUI ---
+        # Corrigido cálculo para usar a diferença de temperatura (Tq - Tf).
+        fator_seguranca = 1.1 
+        q_conducao = (k * (Tq - Tf) / L_total) * fator_seguranca
+        
         Tf_K, To_K = Tf + 273.15, To + 273.15
         h_conv = calcular_h_conv(Tf, To, wind_speed_ms)
         q_rad = emissividade * sigma * (Tf_K**4 - To_K**4)
         q_conv = h_conv * (Tf - To)
         q_transferencia = q_conv + q_rad
+        
         erro = q_conducao - q_transferencia
         if abs(erro) < tolerancia: return Tf, q_transferencia, True
+
         if erro_anterior is not None and erro * erro_anterior < 0:
             step = max(min_step, step * 0.5)
         Tf += step if erro > 0 else -step
         erro_anterior = erro
+        
     return Tf, None, False
     
 # --- INICIALIZAÇÃO DO APP E SESSION STATE ---
@@ -171,7 +176,6 @@ if not st.session_state.form_submitted:
     with st.form(key="lead_form"):
         col1, col2 = st.columns(2)
         
-        # Campos do formulário
         user_name = col1.text_input("Nome *")
         user_email = col2.text_input("E-mail corporativo *")
         user_company = col1.text_input("Empresa")
@@ -188,12 +192,10 @@ if not st.session_state.form_submitted:
         submit_button = st.form_submit_button(label="Enviar e Acessar Calculadora")
 
     if submit_button:
-        # Validação dos campos
         if not user_name or not user_email or not user_application:
             st.error("Por favor, preencha todos os campos obrigatórios.")
         else:
             with st.spinner("Enviando seus dados..."):
-                # Envia os dados para o RD Station
                 success = enviar_conversao_rdstation(
                     name=user_name,
                     email=user_email,
@@ -205,11 +207,8 @@ if not st.session_state.form_submitted:
                 if success:
                     st.success("Acesso liberado! Carregando a calculadora...")
                     st.session_state.form_submitted = True
-                    st.rerun() # Recarrega o script para mostrar a calculadora
-                else:
-                    # A função enviar_conversao_rdstation já mostra a mensagem de erro
-                    pass 
-
+                    st.rerun()
+                
 else:
     # --- SEÇÃO DA CALCULADORA ---
     df_isolantes = carregar_isolantes_local()
@@ -356,8 +355,6 @@ else:
     st.markdown("""
     > **Nota:** Os cálculos são realizados de acordo com as práticas recomendadas pelas normas **ASTM C680** e **ISO 12241**, em conformidade com os procedimentos da norma brasileira **ABNT NBR 16281**.
     """)
-
-
 
 
 
