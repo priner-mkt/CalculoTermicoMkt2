@@ -4,48 +4,59 @@ import requests
 from PIL import Image
 import pandas as pd
 
-# --- FUNÇÃO DE INTEGRAÇÃO COM RD STATION ---
+# --- FUNÇÃO DE INTEGRAÇÃO COM RD STATION (VERSÃO CORRIGIDA) ---
 def enviar_conversao_rdstation(name, email, company, job_title, application_type):
     """
-    Envia um evento de conversão para o RD Station Marketing.
-    VERSÃO DE TESTE: Enviando apenas o e-mail para isolar o problema.
+    Envia um evento de conversão para o RD Station Marketing com o método de autenticação corrigido.
     """
     try:
-        api_token = st.secrets["rdstation_api_token"]
+        # Pega o Token Privado do arquivo secrets.toml
+        private_token = st.secrets["rd_station_private_token"]
     except KeyError:
-        st.error("Token da API do RD Station não encontrado. Verifique o arquivo secrets.toml.")
+        st.error("Token Privado do RD Station não encontrado. Verifique seu arquivo .streamlit/secrets.toml.")
         return False
 
+    # O identificador do evento de conversão que você criou no RD
     conversion_identifier = "acesso_calculadora_isolamento_teste"
     
-    # --- PAYLOAD DE TESTE MINIMALISTA ---
+    # --- CONSTRUÇÃO CORRETA DA URL COM A API KEY ---
+    # A chave da API vai como um parâmetro na URL
+    url = f"https://api.rd.services/platform/conversions?api_key={private_token}"
+
+    # --- PAYLOAD COMPLETO ---
+    # Enviando os dados completos do formulário
     payload = {
         "event_type": "CONVERSION",
         "event_family": "CDP",
         "payload": {
             "conversion_identifier": conversion_identifier,
-            "email": email
-            # Outros campos foram comentados para o teste
-            # "name": name,
-            # "company": company,
-            # "job_title": job_title,
-            # "cf_aplicacao_de_interesse": application_type
+            "name": name,
+            "email": email,
+            "company_name": company, # O campo padrão no RD é company_name
+            "job_title": job_title,
+            # Este é um campo personalizado. O nome deve ser exatamente igual ao criado no RD.
+            "cf_aplicacao_de_interesse": application_type 
         }
     }
     
+    # --- CABEÇALHOS SEM AUTENTICAÇÃO ---
+    # O cabeçalho de 'authorization' foi removido
     headers = {
         "accept": "application/json",
-        "content-type": "application/json",
-        "authorization": f"Bearer {api_token}"
+        "content-type": "application/json"
     }
 
     try:
-        response = requests.post("https://api.rd.services/platform/conversions", json=payload, headers=headers, timeout=10)
+        response = requests.post(url, json=payload, headers=headers, timeout=10)
+        
+        # A API retorna 200 para sucesso
         if response.status_code == 200:
             return True
         else:
+            # O response.text dará a mensagem de erro exata da API do RD
             st.error(f"Falha ao enviar dados para o RD Station (Erro {response.status_code}): {response.text}")
             return False
+            
     except requests.exceptions.RequestException as e:
         st.error(f"Erro de conexão com a API do RD Station: {e}")
         return False
@@ -131,8 +142,6 @@ def encontrar_temperatura_face_fria(Tq, To, L_total, k_func_str, emissividade, w
         k = calcular_k(k_func_str, T_media)
         if k is None or k <= 0: return None, None, False
 
-        # --- ALTERAÇÃO REALIZADA AQUI ---
-        # Corrigido cálculo para usar a diferença de temperatura (Tq - Tf).
         fator_seguranca = 1.1 
         q_conducao = (k * (Tq - Tf) / L_total) * fator_seguranca
         
@@ -355,7 +364,6 @@ else:
     st.markdown("""
     > **Nota:** Os cálculos são realizados de acordo com as práticas recomendadas pelas normas **ASTM C680** e **ISO 12241**, em conformidade com os procedimentos da norma brasileira **ABNT NBR 16281**.
     """)
-
 
 
 
