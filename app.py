@@ -196,7 +196,7 @@ if not st.session_state.form_submitted:
         
         # --- CHECKBOX DE CONSENTIMENTO ADICIONADO ---
         st.markdown("---") # Adiciona uma linha para separar
-        user_consent = st.checkbox("Eu concordo em receber comunicações e ofertas.")
+        user_consent = st.checkbox("Eu concordo com a Política de privacidade.")
         
         st.markdown("*Campos obrigatórios")
         
@@ -370,6 +370,7 @@ else:
     st.markdown("""
     > **Nota:** Os cálculos são realizados de acordo com as práticas recomendadas pelas normas **ASTM C680** e **ISO 12241**, em conformidade com os procedimentos da norma brasileira **ABNT NBR 16281**.
     """)
+
 
 
 
