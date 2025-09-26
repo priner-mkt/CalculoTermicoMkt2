@@ -198,7 +198,7 @@ if not st.session_state.form_submitted:
         st.markdown("---") # Adiciona uma linha para separar
         user_consent = st.checkbox("Eu concordo com a Política de privacidade.")
         
-        st.markdown("*Campos obrigatórios")
+        st.markdown("Ao preencher o formulário, concordo em receber comunicações de acordo com meus interesses. Você pode alterar suas permissões de comunicação a qualquer tempo.")
         
         submit_button = st.form_submit_button(label="Enviar e Acessar Calculadora")
 
@@ -370,6 +370,7 @@ else:
     st.markdown("""
     > **Nota:** Os cálculos são realizados de acordo com as práticas recomendadas pelas normas **ASTM C680** e **ISO 12241**, em conformidade com os procedimentos da norma brasileira **ABNT NBR 16281**.
     """)
+
 
 
 
