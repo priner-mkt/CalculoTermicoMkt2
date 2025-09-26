@@ -8,7 +8,6 @@ from fpdf import FPDF
 from datetime import datetime
 
 # --- FUNÇÃO PARA GERAR O RELATÓRIO EM PDF ---
-# --- FUNÇÃO PARA GERAR O RELATÓRIO EM PDF (VERSÃO FINAL COM UNICODE E BYTES) ---
 def gerar_pdf_relatorio(titulo, dados_dict, logo_path="logo.png"):
     """
     Gera um relatório em PDF a partir de um dicionário de dados, com suporte a Unicode.
@@ -459,6 +458,7 @@ else:
             file_name=f"relatorio_termico_{time.strftime('%Y%m%d-%H%M%S')}.pdf",
             mime="application/pdf"
         )
+
 
 
 
