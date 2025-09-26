@@ -3,9 +3,80 @@ import math
 import requests
 from PIL import Image
 import pandas as pd
+import time
+from fpdf import FPDF
+from datetime import datetime
 
-# --- FUNÇÃO DE INTEGRAÇÃO COM RD STATION (VERSÃO CORRIGIDA) ---
-# --- FUNÇÃO DE INTEGRAÇÃO COM RD STATION (VERSÃO FINAL CORRIGIDA) ---
+# --- FUNÇÃO PARA GERAR O RELATÓRIO EM PDF ---
+def gerar_pdf_relatorio(titulo, dados_dict, logo_path="logo.png"):
+    """
+    Gera um relatório em PDF a partir de um dicionário de dados.
+    """
+    pdf = FPDF()
+    pdf.add_page()
+
+    # Adicionar logo se existir
+    try:
+        pdf.image(logo_path, x=10, y=8, w=33)
+    except Exception:
+        pass  # Ignora se o logo não for encontrado
+
+    # Título
+    pdf.set_font('Arial', 'B', 18)
+    pdf.cell(0, 10, titulo, 0, 1, 'C')
+    pdf.ln(10)
+
+    # Subtítulo e data
+    pdf.set_font('Arial', 'I', 10)
+    data_geracao = datetime.now().strftime("%d/%m/%Y às %H:%M:%S")
+    pdf.cell(0, 10, f'Relatório gerado em: {data_geracao}', 0, 1, 'C')
+    pdf.ln(10)
+
+    # Corpo do Relatório
+    pdf.set_font('Arial', '', 12)
+
+    # Mapeamento de chaves para rótulos amigáveis
+    mapa_rotulos = {
+        "material": "Material Isolante",
+        "tq": "Temperatura da Face Quente (°C)",
+        "to": "Temperatura Ambiente (°C)",
+        "esp_total": "Espessura Total do Isolamento (mm)",
+        "tf": "Temperatura da Face Fria (°C)",
+        "perda_sem_kw": "Perda de Calor Sem Isolante (kW/m²)",
+        "perda_com_kw": "Perda de Calor Com Isolante (kW/m²)",
+        "reducao_pct": "Redução de Perda de Calor (%)",
+        "eco_mensal": "Economia Mensal Estimada (R$)",
+        "eco_anual": "Economia Anual Estimada (R$)",
+        "co2_ton_ano": "Carbono Evitado (tCO₂e/ano)",
+    }
+
+    # Gera o relatório apenas para as chaves presentes no dicionário
+    for chave, rotulo in mapa_rotulos.items():
+        if chave in dados_dict:
+            valor = dados_dict[chave]
+            # Formatação especial para valores numéricos
+            if isinstance(valor, (int, float)):
+                if "eco_" in chave:
+                    valor_str = f"R$ {valor:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
+                elif "_pct" in chave:
+                    valor_str = f"{valor:.1f} %".replace('.', ',')
+                elif "_kw" in chave:
+                    valor_str = f"{valor:.3f}".replace('.', ',')
+                else:
+                    valor_str = f"{valor:.1f}".replace('.', ',')
+            else:
+                valor_str = str(valor)
+
+            pdf.set_font('Arial', 'B', 12)
+            pdf.cell(95, 10, f'{rotulo}:', 1, 0, 'L')
+            pdf.set_font('Arial', '', 12)
+            pdf.cell(95, 10, valor_str, 1, 1, 'R')
+
+    # Retorna o conteúdo do PDF como bytes
+    return pdf.output(dest='S').encode('latin-1')
+
+
+# --- FUNÇÃO DE INTEGRAÇÃO COM RD STATION ---
 def enviar_conversao_rdstation(name, email, company, job_title, application_type):
     """
     Envia um evento de conversão para o RD Station Marketing, incluindo a base de consentimento.
@@ -17,9 +88,7 @@ def enviar_conversao_rdstation(name, email, company, job_title, application_type
         return False
 
     conversion_identifier = "acesso_calculadora_isolamento_teste"
-    
     url = f"https://api.rd.services/platform/conversions?api_key={api_key}"
-
     payload = {
         "event_type": "CONVERSION",
         "event_family": "CDP",
@@ -30,7 +99,6 @@ def enviar_conversao_rdstation(name, email, company, job_title, application_type
             "company_name": company,
             "job_title": job_title,
             "cf_aplicacao_de_interesse": application_type,
-            # --- ADIÇÃO IMPORTANTE AQUI ---
             "legal_bases": [
                 {
                     "category": "communications",
@@ -40,7 +108,6 @@ def enviar_conversao_rdstation(name, email, company, job_title, application_type
             ]
         }
     }
-    
     headers = {
         "accept": "application/json",
         "content-type": "application/json"
@@ -48,13 +115,11 @@ def enviar_conversao_rdstation(name, email, company, job_title, application_type
 
     try:
         response = requests.post(url, json=payload, headers=headers, timeout=10)
-        
         if response.status_code == 200:
             return True
         else:
             st.error(f"Falha ao enviar dados para o RD Station (Erro {response.status_code}): {response.text}")
             return False
-            
     except requests.exceptions.RequestException as e:
         st.error(f"Erro de conexão com a API do RD Station: {e}")
         return False
@@ -158,7 +223,7 @@ def encontrar_temperatura_face_fria(Tq, To, L_total, k_func_str, emissividade, w
         erro_anterior = erro
         
     return Tf, None, False
-    
+
 # --- INICIALIZAÇÃO DO APP E SESSION STATE ---
 try:
     logo = Image.open("logo.png")
@@ -183,8 +248,8 @@ if not st.session_state.form_submitted:
     with st.form(key="lead_form"):
         col1, col2 = st.columns(2)
         
-        user_name = col1.text_input("Nome")
-        user_email = col2.text_input("E-mail corporativo")
+        user_name = col1.text_input("Nome *")
+        user_email = col2.text_input("E-mail corporativo *")
         user_company = col1.text_input("Empresa")
         user_job_title = col2.text_input("Cargo")
         application_options = [
@@ -194,22 +259,19 @@ if not st.session_state.form_submitted:
         ]
         user_application = st.selectbox("Principal Aplicação de Interesse *", application_options)
         
-        # --- CHECKBOX DE CONSENTIMENTO ADICIONADO ---
-        st.markdown("---") # Adiciona uma linha para separar
-        user_consent = st.checkbox("Eu concordo com a Política de Privacidade.")
+        st.markdown("---")
+        user_consent = st.checkbox("Eu concordo com a Política de Privacidade e em receber comunicações.")
         
-        st.markdown("Ao preencher o formulário, concordo em receber comunicações de acordo com meus interesses. Você pode alterar suas permissões de comunicação a qualquer tempo.")
+        st.markdown("*Campos obrigatórios")
         
         submit_button = st.form_submit_button(label="Enviar e Acessar Calculadora")
 
     if submit_button:
-        # Verifica se os campos E o checkbox foram marcados
         if not user_name or not user_email or not user_application:
             st.error("Por favor, preencha todos os campos obrigatórios.")
         elif not user_consent:
-            st.error("Você precisa concordar com a Política de Privacidade.")
+            st.error("Você precisa concordar com a Política de Privacidade para continuar.")
         else:
-            # O resto do seu código continua aqui...
             with st.spinner("Enviando seus dados..."):
                 success = enviar_conversao_rdstation(
                     name=user_name,
@@ -223,7 +285,7 @@ if not st.session_state.form_submitted:
                     st.success("Acesso liberado! Carregando a calculadora...")
                     st.session_state.form_submitted = True
                     st.rerun()
-                
+
 else:
     # --- SEÇÃO DA CALCULADORA ---
     df_isolantes = carregar_isolantes_local()
@@ -302,10 +364,12 @@ else:
                     perda_sem_kw = (q_rad_sem + q_conv_sem) / 1000
                     
                     dados_para_relatorio = {
-                        "material": material_selecionado_nome, "geometria": geometry, "num_camadas": numero_camadas, 
-                        "esp_total": L_total, "tq": Tq, "to": To, "emissividade": emissividade_fixa, 
-                        "tf": Tf, "perda_com_kw": perda_com_kw, "perda_sem_kw": perda_sem_kw, 
-                        "calculo_financeiro": calcular_financeiro
+                        "material": material_selecionado_nome,
+                        "tq": Tq, "to": To, 
+                        "esp_total": L_total, 
+                        "tf": Tf, 
+                        "perda_sem_kw": perda_sem_kw,
+                        "perda_com_kw": perda_com_kw,
                     }
 
                     if calcular_financeiro:
@@ -322,8 +386,10 @@ else:
                         co2_evitado_anual_ton = co2_evitado_anual_kg / 1000
                         
                         dados_para_relatorio.update({
-                            "eco_mensal": eco_mensal, "eco_anual": eco_anual, 
-                            "reducao_pct": reducao_pct, "co2_ton_ano": co2_evitado_anual_ton
+                            "reducao_pct": reducao_pct,
+                            "eco_mensal": eco_mensal, 
+                            "eco_anual": eco_anual, 
+                            "co2_ton_ano": co2_evitado_anual_ton
                         })
 
                     st.session_state.dados_ultima_simulacao = dados_para_relatorio
@@ -336,12 +402,12 @@ else:
         st.subheader("Resultados")
         st.success(f"🌡️ Temperatura da face fria: {dados['tf']:.1f} °C".replace('.', ','))
         
-        if dados['num_camadas'] > 1:
+        if numero_camadas > 1:
             T_atual = dados['tq']
             k_medio = calcular_k(k_func_str, (dados['tq'] + dados['tf']) / 2)
             q_com_isolante = dados['perda_com_kw'] * 1000
             if k_medio and q_com_isolante is not None:
-                for i in range(dados['num_camadas'] - 1):
+                for i in range(numero_camadas - 1):
                     resistencia_camada = (espessuras[i] / 1000) / k_medio
                     delta_T_camada = q_com_isolante * resistencia_camada
                     T_interface = T_atual - delta_T_camada
@@ -351,7 +417,7 @@ else:
         st.info(f"⚡ Perda de calor com isolante: {dados['perda_com_kw']:.3f} kW/m²".replace('.', ','))
         st.warning(f"⚡ Perda de calor sem isolante: {dados['perda_sem_kw']:.3f} kW/m²".replace('.', ','))
         
-        if dados.get('calculo_financeiro', False):
+        if dados.get("reducao_pct") is not None:
             st.subheader("Retorno Financeiro e Ambiental")
             m1, m2, m3 = st.columns(3)
             
@@ -366,13 +432,15 @@ else:
             m2.metric("Carbono Evitado", f"{dados.get('co2_ton_ano', 0):.2f} tCO₂e/ano")
             m3.metric("Redução de Perda", f"{dados['reducao_pct']:.1f} %")
 
-    st.markdown("---")
-    st.markdown("""
-    > **Nota:** Os cálculos são realizados de acordo com as práticas recomendadas pelas normas **ASTM C680** e **ISO 12241**, em conformidade com os procedimentos da norma brasileira **ABNT NBR 16281**.
-    """)
-
-
-
+        # --- BOTÃO DE DOWNLOAD PDF ADICIONADO AQUI ---
+        st.markdown("---")
+        pdf_bytes = gerar_pdf_relatorio("Relatório de Análise Térmica", st.session_state.dados_ultima_simulacao)
+        st.download_button(
+            label="📄 Baixar Relatório em PDF",
+            data=pdf_bytes,
+            file_name=f"relatorio_termico_{time.strftime('%Y%m%d-%H%M%S')}.pdf",
+            mime="application/pdf"
+        )
 
 
 
