@@ -207,7 +207,7 @@ if not st.session_state.form_submitted:
         if not user_name or not user_email or not user_application:
             st.error("Por favor, preencha todos os campos obrigatórios.")
         elif not user_consent:
-            st.error("Você precisa concordar em receber comunicações para acessar a ferramenta.")
+            st.error("Você precisa concordar com a Política de Privacidade.")
         else:
             # O resto do seu código continua aqui...
             with st.spinner("Enviando seus dados..."):
@@ -370,6 +370,7 @@ else:
     st.markdown("""
     > **Nota:** Os cálculos são realizados de acordo com as práticas recomendadas pelas normas **ASTM C680** e **ISO 12241**, em conformidade com os procedimentos da norma brasileira **ABNT NBR 16281**.
     """)
+
 
 
 
