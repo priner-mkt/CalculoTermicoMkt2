@@ -5,24 +5,23 @@ from PIL import Image
 import pandas as pd
 
 # --- FUNÇÃO DE INTEGRAÇÃO COM RD STATION (VERSÃO CORRIGIDA) ---
+# --- FUNÇÃO DE INTEGRAÇÃO COM RD STATION (VERSÃO FINAL CORRIGIDA) ---
 def enviar_conversao_rdstation(name, email, company, job_title, application_type):
     """
-    Envia um evento de conversão para o RD Station Marketing com o método de autenticação corrigido.
+    Envia um evento de conversão para o RD Station Marketing usando a Chave de API correta.
     """
     try:
-        # Pega o Token Privado do arquivo secrets.toml
+        # ATUALIZAÇÃO: Buscando a nova 'Chave de API' do secrets.toml
         api_key = st.secrets["rd_station_api_key"]
     except KeyError:
-        st.error("Token Privado do RD Station não encontrado. Verifique seu arquivo .streamlit/secrets.toml.")
+        st.error("Chave de API do RD Station não encontrada. Verifique seu arquivo .streamlit/secrets.toml.")
         return False
 
-    # O identificador do evento de conversão criado no RD
     conversion_identifier = "acesso_calculadora_isolamento_teste"
     
-    # --- CONSTRUÇÃO DA URL COM A API KEY ---
-    url = f"https://api.rd.services/platform/conversions?api_key={private_token}"
+    # A URL agora usará a nova api_key
+    url = f"https://api.rd.services/platform/conversions?api_key={api_key}"
 
-    # Enviando os dados completos do formulário
     payload = {
         "event_type": "CONVERSION",
         "event_family": "CDP",
@@ -30,13 +29,12 @@ def enviar_conversao_rdstation(name, email, company, job_title, application_type
             "conversion_identifier": conversion_identifier,
             "name": name,
             "email": email,
-            "company_name": company, # O campo padrão no RD é company_name
+            "company_name": company,
             "job_title": job_title,
             "cf_aplicacao_de_interesse": application_type 
         }
     }
     
-    # --- CABEÇALHOS SEM AUTENTICAÇÃO ---
     headers = {
         "accept": "application/json",
         "content-type": "application/json"
@@ -48,9 +46,12 @@ def enviar_conversao_rdstation(name, email, company, job_title, application_type
         if response.status_code == 200:
             return True
         else:
-            # O response.text dará a mensagem de erro exata da API do RD
             st.error(f"Falha ao enviar dados para o RD Station (Erro {response.status_code}): {response.text}")
             return False
+            
+    except requests.exceptions.RequestException as e:
+        st.error(f"Erro de conexão com a API do RD Station: {e}")
+        return False
             
     except requests.exceptions.RequestException as e:
         st.error(f"Erro de conexão com a API do RD Station: {e}")
@@ -359,6 +360,7 @@ else:
     st.markdown("""
     > **Nota:** Os cálculos são realizados de acordo com as práticas recomendadas pelas normas **ASTM C680** e **ISO 12241**, em conformidade com os procedimentos da norma brasileira **ABNT NBR 16281**.
     """)
+
 
 
 
