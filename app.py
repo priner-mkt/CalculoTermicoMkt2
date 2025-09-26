@@ -8,7 +8,7 @@ import pandas as pd
 # --- FUNÇÃO DE INTEGRAÇÃO COM RD STATION (VERSÃO FINAL CORRIGIDA) ---
 def enviar_conversao_rdstation(name, email, company, job_title, application_type):
     """
-    Envia um evento de conversão para o RD Station Marketing usando a Chave de API correta.
+    Envia um evento de conversão para o RD Station Marketing, incluindo a base de consentimento.
     """
     try:
         api_key = st.secrets["rd_station_api_key"]
@@ -29,7 +29,15 @@ def enviar_conversao_rdstation(name, email, company, job_title, application_type
             "email": email,
             "company_name": company,
             "job_title": job_title,
-            "cf_aplicacao_de_interesse": application_type 
+            "cf_aplicacao_de_interesse": application_type,
+            # --- ADIÇÃO IMPORTANTE AQUI ---
+            "legal_bases": [
+                {
+                    "category": "communications",
+                    "type": "consent",
+                    "status": "granted"
+                }
+            ]
         }
     }
     
@@ -46,10 +54,6 @@ def enviar_conversao_rdstation(name, email, company, job_title, application_type
         else:
             st.error(f"Falha ao enviar dados para o RD Station (Erro {response.status_code}): {response.text}")
             return False
-            
-    except requests.exceptions.RequestException as e:
-        st.error(f"Erro de conexão com a API do RD Station: {e}")
-        return False
             
     except requests.exceptions.RequestException as e:
         st.error(f"Erro de conexão com a API do RD Station: {e}")
@@ -358,6 +362,7 @@ else:
     st.markdown("""
     > **Nota:** Os cálculos são realizados de acordo com as práticas recomendadas pelas normas **ASTM C680** e **ISO 12241**, em conformidade com os procedimentos da norma brasileira **ABNT NBR 16281**.
     """)
+
 
 
 
