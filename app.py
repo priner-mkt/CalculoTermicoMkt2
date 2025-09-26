@@ -6,90 +6,97 @@ import pandas as pd
 import time
 from fpdf import FPDF
 from datetime import datetime
+import os # <-- Importação adicionada
 
-# --- FUNÇÃO PARA GERAR O RELATÓRIO EM PDF ---
-def gerar_pdf_relatorio(titulo, dados_dict, logo_path="logo.png"):
+# --- FUNÇÃO DE GERAÇÃO DE PDF (ATUALIZADA COM A LÓGICA DO EXEMPLO) ---
+def gerar_pdf_relatorio(dados):
     """
-    Gera um relatório em PDF a partir de um dicionário de dados, com suporte a Unicode.
+    Gera um relatório em PDF formatado a partir dos dados da simulação.
     """
     pdf = FPDF()
     pdf.add_page()
-    
-    # Adicionar uma fonte que suporte Unicode (DejaVu)
+
+    # Tenta adicionar uma imagem de fundo (opcional)
+    background_image_path = 'fundo_relatorio.png'
+    if os.path.exists(background_image_path):
+        pdf.image(background_image_path, x=0, y=0, w=210, h=297)
+    else:
+        # Se a imagem não for encontrada, um aviso pode ser útil no console/log
+        # st.warning() não é ideal aqui pois apareceria na interface principal
+        pass
+
+    # Adiciona fontes que suportam caracteres especiais (Unicode)
     try:
         pdf.add_font('DejaVu', '', 'DejaVuSans.ttf', uni=True)
         pdf.add_font('DejaVu', 'B', 'DejaVuSans-Bold.ttf', uni=True)
-        fonte_padrao = 'DejaVu'
+        font_family = 'DejaVu'
     except RuntimeError:
-        # Fallback para Arial se a fonte não puder ser carregada
-        st.warning("Fonte DejaVu não encontrada, usando Arial. Caracteres especiais podem não ser exibidos.")
-        fonte_padrao = 'Arial'
+        font_family = 'Arial'
+        st.warning("Fonte DejaVu não encontrada, o PDF usará a fonte padrão Arial.")
 
-    # Adicionar logo se existir
-    try:
-        pdf.image(logo_path, x=10, y=8, w=33)
-    except Exception:
-        pass
-
-    # Título
-    pdf.set_font(fonte_padrao, 'B', 18)
-    pdf.cell(0, 10, titulo, 0, 1, 'C')
-    pdf.ln(10)
-
-    # Subtítulo e data
-    pdf.set_font(fonte_padrao, '', 10)
-    data_geracao = datetime.now().strftime("%d/%m/%Y às %H:%M:%S")
-    pdf.cell(0, 10, f'Relatório gerado em: {data_geracao}', 0, 1, 'C')
-    pdf.ln(10)
-
-    # Corpo do Relatório
-    pdf.set_font(fonte_padrao, '', 12)
-    
-    # Mapeamento de chaves para rótulos amigáveis
-    mapa_rotulos = {
-        # Cálculo Quente
-        "material": "Material Isolante",
-        "tq": "Temperatura da Face Quente (°C)",
-        "to": "Temperatura Ambiente (°C)",
-        "esp_total": "Espessura Total do Isolamento (mm)",
-        "tf": "Temperatura da Face Fria (°C)",
-        "perda_sem_kw": "Perda de Calor Sem Isolante (kW/m²)",
-        "perda_com_kw": "Perda de Calor Com Isolante (kW/m²)",
-        "reducao_pct": "Redução de Perda de Calor (%)",
-        "eco_mensal": "Economia Mensal Estimada (R$)",
-        "eco_anual": "Economia Anual Estimada (R$)",
-        "co2_ton_ano": "Carbono Evitado (tCO₂e/ano)",
-        # Cálculo Frio
-        "ti": "Temperatura Interna (°C)",
-        "ta": "Temperatura Ambiente (°C)",
-        "ur": "Umidade Relativa do Ar (%)",
-        "vento": "Velocidade do Vento (m/s)",
-        "t_orvalho": "Temperatura de Orvalho (°C)",
-        "espessura_final": "Espessura Mínima Calculada (mm)"
-    }
-
-    for chave, valor in dados_dict.items():
-        rotulo = mapa_rotulos.get(chave, chave.replace('_', ' ').title())
+    # --- CABEÇALHO ---
+    pdf.set_y(8) # Posiciona o cursor no topo
+    if os.path.exists(background_image_path):
+        pdf.set_text_color(255, 255, 255) # Cor branca para texto se houver fundo escuro
         
-        if isinstance(valor, (int, float)):
-            if "eco_" in chave:
-                valor_str = f"R$ {valor:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
-            elif "_pct" in chave or chave == "ur":
-                valor_str = f"{valor:.1f} %".replace('.',',')
-            elif "_kw" in chave:
-                valor_str = f"{valor:.3f}".replace('.',',')
-            else:
-                valor_str = f"{valor:.1f}".replace('.',',')
-        else:
-            valor_str = str(valor)
+    pdf.set_font(font_family, 'B', 16)
+    pdf.cell(0, 10, "Relatório de Análise Térmica", 0, 1, "C")
+    pdf.set_text_color(0, 0, 0) # Restaura a cor padrão (preto)
+    pdf.ln(10)
 
-        if rotulo:
-            pdf.set_font(fonte_padrao, 'B', 12)
-            pdf.cell(95, 10, f'{rotulo}:', 1, 0, 'L')
-            pdf.set_font(fonte_padrao, '', 12)
-            pdf.cell(95, 10, valor_str, 1, 1, 'R')
+    pdf.set_font(font_family, '', 10)
+    data_geracao = datetime.now().strftime("%d/%m/%Y")
+    pdf.cell(0, 5, f"Data da Simulação: {data_geracao}", 0, 1, "L")
+    pdf.ln(5)
 
-    # --- LINHA CORRIGIDA ---
+    # --- SEÇÃO 1: PARÂMETROS DE ENTRADA ---
+    pdf.set_font(font_family, 'B', 12)
+    pdf.cell(0, 8, "1. Parâmetros de Entrada", ln=1)
+    pdf.set_font(font_family, '', 11)
+    
+    texto_entradas = (
+        f"Material do Isolante: {dados.get('material', 'N/A')}\n"
+        f"Espessura Total do Isolamento: {dados.get('esp_total', 0)} mm\n"
+        f"Temperatura da Face Quente: {dados.get('tq', 0):.1f} °C\n"
+        f"Temperatura Ambiente: {dados.get('to', 0):.1f} °C"
+    )
+    pdf.multi_cell(0, 6, texto_entradas)
+    pdf.ln(5)
+
+    # --- SEÇÃO 2: RESULTADOS DO CÁLCULO TÉRMICO ---
+    pdf.set_font(font_family, 'B', 12)
+    pdf.cell(0, 8, "2. Resultados do Cálculo Térmico", ln=1)
+    pdf.set_font(font_family, '', 11)
+
+    texto_resultados = (
+        f"Temperatura da Face Fria: {dados.get('tf', 0):.1f} °C\n"
+        f"Perda de Calor com Isolante: {dados.get('perda_com_kw', 0):.3f} kW/m²\n"
+        f"Perda de Calor sem Isolante: {dados.get('perda_sem_kw', 0):.3f} kW/m²"
+    )
+    pdf.multi_cell(0, 6, texto_resultados)
+    pdf.ln(5)
+
+    # --- SEÇÃO 3: ANÁLISE FINANCEIRA E AMBIENTAL ---
+    if "eco_anual" in dados: # Verifica se os dados financeiros existem
+        pdf.set_font(font_family, 'B', 12)
+        pdf.cell(0, 8, "3. Análise Financeira e Ambiental", ln=1)
+        pdf.set_font(font_family, '', 11)
+        
+        # Formata os valores monetários e percentuais para o padrão brasileiro
+        eco_mensal_str = f"R$ {dados.get('eco_mensal', 0):,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
+        eco_anual_str = f"R$ {dados.get('eco_anual', 0):,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
+        reducao_str = f"{dados.get('reducao_pct', 0):.1f} %".replace('.', ',')
+        co2_str = f"{dados.get('co2_ton_ano', 0):.2f} tCO₂e/ano".replace('.', ',')
+
+        texto_financeiro = (
+            f"Economia Mensal Estimada: {eco_mensal_str}\n"
+            f"Economia Anual Estimada: {eco_anual_str}\n"
+            f"Redução de Perda de Calor: {reducao_str}\n"
+            f"Carbono Evitado: {co2_str}"
+        )
+        pdf.multi_cell(0, 6, texto_financeiro)
+
+    # Retorna os bytes do PDF para o botão de download
     return pdf.output()
 
 
@@ -451,16 +458,14 @@ else:
 
         # --- BOTÃO DE DOWNLOAD PDF ADICIONADO AQUI ---
         st.markdown("---")
-        pdf_bytes = gerar_pdf_relatorio("Relatório de Análise Térmica", st.session_state.dados_ultima_simulacao)
+        # A chamada da função para gerar o PDF agora usa a nova lógica
+        pdf_bytes = gerar_pdf_relatorio(st.session_state.dados_ultima_simulacao)
         st.download_button(
             label="📄 Baixar Relatório em PDF",
             data=pdf_bytes,
             file_name=f"relatorio_termico_{time.strftime('%Y%m%d-%H%M%S')}.pdf",
             mime="application/pdf"
         )
-
-
-
 
 
 
