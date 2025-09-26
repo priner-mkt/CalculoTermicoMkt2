@@ -4,4 +4,5 @@ gspread
 oauth2client
 pandas
 scipy
-fpdf2
+fpdf
+
