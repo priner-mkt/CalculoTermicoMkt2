@@ -11,7 +11,6 @@ def enviar_conversao_rdstation(name, email, company, job_title, application_type
     Envia um evento de conversão para o RD Station Marketing usando a Chave de API correta.
     """
     try:
-        # ATUALIZAÇÃO: Buscando a nova 'Chave de API' do secrets.toml
         api_key = st.secrets["rd_station_api_key"]
     except KeyError:
         st.error("Chave de API do RD Station não encontrada. Verifique seu arquivo .streamlit/secrets.toml.")
@@ -19,7 +18,6 @@ def enviar_conversao_rdstation(name, email, company, job_title, application_type
 
     conversion_identifier = "acesso_calculadora_isolamento_teste"
     
-    # A URL agora usará a nova api_key
     url = f"https://api.rd.services/platform/conversions?api_key={api_key}"
 
     payload = {
@@ -360,6 +358,7 @@ else:
     st.markdown("""
     > **Nota:** Os cálculos são realizados de acordo com as práticas recomendadas pelas normas **ASTM C680** e **ISO 12241**, em conformidade com os procedimentos da norma brasileira **ABNT NBR 16281**.
     """)
+
 
 
 
