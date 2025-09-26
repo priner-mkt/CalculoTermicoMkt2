@@ -94,7 +94,7 @@ def gerar_pdf_relatorio(titulo, dados_dict, logo_path="logo.png"):
             pdf.cell(95, 10, valor_str, 1, 1, 'R')
 
     # --- ALTERAÇÃO 2: A saída agora não precisa mais do encode('latin-1') ---
-    return pdf.output(dest='S')
+    return pdf.output()
 
 
 # --- FUNÇÃO DE INTEGRAÇÃO COM RD STATION ---
@@ -462,6 +462,7 @@ else:
             file_name=f"relatorio_termico_{time.strftime('%Y%m%d-%H%M%S')}.pdf",
             mime="application/pdf"
         )
+
 
 
 
