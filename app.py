@@ -6,9 +6,9 @@ import pandas as pd
 import time
 from fpdf import FPDF
 from datetime import datetime
-import os # <-- Importação adicionada
+import os
 
-# --- FUNÇÃO DE GERAÇÃO DE PDF (ATUALIZADA COM A LÓGICA DO EXEMPLO) ---
+# --- FUNÇÃO DE GERAÇÃO DE PDF
 def gerar_pdf_relatorio(dados):
     """
     Gera um relatório em PDF formatado a partir dos dados da simulação.
@@ -97,7 +97,7 @@ def gerar_pdf_relatorio(dados):
         pdf.multi_cell(0, 6, texto_financeiro)
 
     # Retorna os bytes do PDF para o botão de download
-    return pdf.output()
+    return pdf.output(dest='S').encode('latin-1')
 
 
 # --- FUNÇÃO DE INTEGRAÇÃO COM RD STATION ---
@@ -466,6 +466,7 @@ else:
             file_name=f"relatorio_termico_{time.strftime('%Y%m%d-%H%M%S')}.pdf",
             mime="application/pdf"
         )
+
 
 
 
