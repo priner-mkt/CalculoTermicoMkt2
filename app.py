@@ -194,14 +194,22 @@ if not st.session_state.form_submitted:
         ]
         user_application = st.selectbox("Principal Aplicação de Interesse *", application_options)
         
+        # --- CHECKBOX DE CONSENTIMENTO ADICIONADO ---
+        st.markdown("---") # Adiciona uma linha para separar
+        user_consent = st.checkbox("Eu concordo em receber comunicações e ofertas.")
+        
         st.markdown("*Campos obrigatórios")
         
         submit_button = st.form_submit_button(label="Enviar e Acessar Calculadora")
 
     if submit_button:
+        # Verifica se os campos E o checkbox foram marcados
         if not user_name or not user_email or not user_application:
             st.error("Por favor, preencha todos os campos obrigatórios.")
+        elif not user_consent:
+            st.error("Você precisa concordar em receber comunicações para acessar a ferramenta.")
         else:
+            # O resto do seu código continua aqui...
             with st.spinner("Enviando seus dados..."):
                 success = enviar_conversao_rdstation(
                     name=user_name,
@@ -362,6 +370,7 @@ else:
     st.markdown("""
     > **Nota:** Os cálculos são realizados de acordo com as práticas recomendadas pelas normas **ASTM C680** e **ISO 12241**, em conformidade com os procedimentos da norma brasileira **ABNT NBR 16281**.
     """)
+
 
 
 
