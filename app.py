@@ -8,7 +8,7 @@ from fpdf import FPDF
 from datetime import datetime
 
 # --- FUNÇÃO PARA GERAR O RELATÓRIO EM PDF ---
-# --- FUNÇÃO PARA GERAR O RELATÓRIO EM PDF (VERSÃO CORRIGIDA COM UNICODE) ---
+# --- FUNÇÃO PARA GERAR O RELATÓRIO EM PDF (VERSÃO FINAL COM UNICODE E BYTES) ---
 def gerar_pdf_relatorio(titulo, dados_dict, logo_path="logo.png"):
     """
     Gera um relatório em PDF a partir de um dicionário de dados, com suporte a Unicode.
@@ -16,18 +16,15 @@ def gerar_pdf_relatorio(titulo, dados_dict, logo_path="logo.png"):
     pdf = FPDF()
     pdf.add_page()
     
-    # --- ALTERAÇÃO 1: Adicionar uma fonte que suporte Unicode (DejaVu) ---
-    # A fpdf2 já inclui a fonte DejaVu, então não precisamos do arquivo .ttf
+    # Adicionar uma fonte que suporte Unicode (DejaVu)
     try:
         pdf.add_font('DejaVu', '', 'DejaVuSans.ttf', uni=True)
         pdf.add_font('DejaVu', 'B', 'DejaVuSans-Bold.ttf', uni=True)
-        # Define a fonte padrão como DejaVu
         fonte_padrao = 'DejaVu'
     except RuntimeError:
         # Fallback para Arial se a fonte não puder ser carregada
         st.warning("Fonte DejaVu não encontrada, usando Arial. Caracteres especiais podem não ser exibidos.")
         fonte_padrao = 'Arial'
-
 
     # Adicionar logo se existir
     try:
@@ -36,18 +33,18 @@ def gerar_pdf_relatorio(titulo, dados_dict, logo_path="logo.png"):
         pass
 
     # Título
-    pdf.set_font(fonte_padrao, 'B', 18) # Usar a fonte padrão
+    pdf.set_font(fonte_padrao, 'B', 18)
     pdf.cell(0, 10, titulo, 0, 1, 'C')
     pdf.ln(10)
 
     # Subtítulo e data
-    pdf.set_font(fonte_padrao, '', 10) # Usar a fonte padrão
+    pdf.set_font(fonte_padrao, '', 10)
     data_geracao = datetime.now().strftime("%d/%m/%Y às %H:%M:%S")
     pdf.cell(0, 10, f'Relatório gerado em: {data_geracao}', 0, 1, 'C')
     pdf.ln(10)
 
     # Corpo do Relatório
-    pdf.set_font(fonte_padrao, '', 12) # Usar a fonte padrão
+    pdf.set_font(fonte_padrao, '', 12)
     
     # Mapeamento de chaves para rótulos amigáveis
     mapa_rotulos = {
@@ -88,12 +85,12 @@ def gerar_pdf_relatorio(titulo, dados_dict, logo_path="logo.png"):
             valor_str = str(valor)
 
         if rotulo:
-            pdf.set_font(fonte_padrao, 'B', 12) # Usar a fonte padrão
+            pdf.set_font(fonte_padrao, 'B', 12)
             pdf.cell(95, 10, f'{rotulo}:', 1, 0, 'L')
-            pdf.set_font(fonte_padrao, '', 12) # Usar a fonte padrão
+            pdf.set_font(fonte_padrao, '', 12)
             pdf.cell(95, 10, valor_str, 1, 1, 'R')
 
-    # --- ALTERAÇÃO 2: A saída agora não precisa mais do encode('latin-1') ---
+    # --- LINHA CORRIGIDA ---
     return pdf.output()
 
 
@@ -462,6 +459,7 @@ else:
             file_name=f"relatorio_termico_{time.strftime('%Y%m%d-%H%M%S')}.pdf",
             mime="application/pdf"
         )
+
 
 
 
