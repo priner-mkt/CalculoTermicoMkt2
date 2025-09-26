@@ -183,8 +183,8 @@ if not st.session_state.form_submitted:
     with st.form(key="lead_form"):
         col1, col2 = st.columns(2)
         
-        user_name = col1.text_input("Nome *")
-        user_email = col2.text_input("E-mail corporativo *")
+        user_name = col1.text_input("Nome")
+        user_email = col2.text_input("E-mail corporativo")
         user_company = col1.text_input("Empresa")
         user_job_title = col2.text_input("Cargo")
         application_options = [
@@ -370,6 +370,7 @@ else:
     st.markdown("""
     > **Nota:** Os cálculos são realizados de acordo com as práticas recomendadas pelas normas **ASTM C680** e **ISO 12241**, em conformidade com os procedimentos da norma brasileira **ABNT NBR 16281**.
     """)
+
 
 
 
