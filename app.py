@@ -11,19 +11,17 @@ def enviar_conversao_rdstation(name, email, company, job_title, application_type
     """
     try:
         # Pega o Token Privado do arquivo secrets.toml
-        private_token = st.secrets["rd_station_private_token"]
+        api_key = st.secrets["rd_station_api_key"]
     except KeyError:
         st.error("Token Privado do RD Station não encontrado. Verifique seu arquivo .streamlit/secrets.toml.")
         return False
 
-    # O identificador do evento de conversão que você criou no RD
+    # O identificador do evento de conversão criado no RD
     conversion_identifier = "acesso_calculadora_isolamento_teste"
     
-    # --- CONSTRUÇÃO CORRETA DA URL COM A API KEY ---
-    # A chave da API vai como um parâmetro na URL
+    # --- CONSTRUÇÃO DA URL COM A API KEY ---
     url = f"https://api.rd.services/platform/conversions?api_key={private_token}"
 
-    # --- PAYLOAD COMPLETO ---
     # Enviando os dados completos do formulário
     payload = {
         "event_type": "CONVERSION",
@@ -34,13 +32,11 @@ def enviar_conversao_rdstation(name, email, company, job_title, application_type
             "email": email,
             "company_name": company, # O campo padrão no RD é company_name
             "job_title": job_title,
-            # Este é um campo personalizado. O nome deve ser exatamente igual ao criado no RD.
             "cf_aplicacao_de_interesse": application_type 
         }
     }
     
     # --- CABEÇALHOS SEM AUTENTICAÇÃO ---
-    # O cabeçalho de 'authorization' foi removido
     headers = {
         "accept": "application/json",
         "content-type": "application/json"
@@ -49,7 +45,6 @@ def enviar_conversao_rdstation(name, email, company, job_title, application_type
     try:
         response = requests.post(url, json=payload, headers=headers, timeout=10)
         
-        # A API retorna 200 para sucesso
         if response.status_code == 200:
             return True
         else:
@@ -364,6 +359,7 @@ else:
     st.markdown("""
     > **Nota:** Os cálculos são realizados de acordo com as práticas recomendadas pelas normas **ASTM C680** e **ISO 12241**, em conformidade com os procedimentos da norma brasileira **ABNT NBR 16281**.
     """)
+
 
 
 
