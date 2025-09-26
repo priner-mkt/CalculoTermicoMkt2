@@ -8,35 +8,50 @@ from fpdf import FPDF
 from datetime import datetime
 
 # --- FUNÇÃO PARA GERAR O RELATÓRIO EM PDF ---
+# --- FUNÇÃO PARA GERAR O RELATÓRIO EM PDF (VERSÃO CORRIGIDA COM UNICODE) ---
 def gerar_pdf_relatorio(titulo, dados_dict, logo_path="logo.png"):
     """
-    Gera um relatório em PDF a partir de um dicionário de dados.
+    Gera um relatório em PDF a partir de um dicionário de dados, com suporte a Unicode.
     """
     pdf = FPDF()
     pdf.add_page()
+    
+    # --- ALTERAÇÃO 1: Adicionar uma fonte que suporte Unicode (DejaVu) ---
+    # A fpdf2 já inclui a fonte DejaVu, então não precisamos do arquivo .ttf
+    try:
+        pdf.add_font('DejaVu', '', 'DejaVuSans.ttf', uni=True)
+        pdf.add_font('DejaVu', 'B', 'DejaVuSans-Bold.ttf', uni=True)
+        # Define a fonte padrão como DejaVu
+        fonte_padrao = 'DejaVu'
+    except RuntimeError:
+        # Fallback para Arial se a fonte não puder ser carregada
+        st.warning("Fonte DejaVu não encontrada, usando Arial. Caracteres especiais podem não ser exibidos.")
+        fonte_padrao = 'Arial'
+
 
     # Adicionar logo se existir
     try:
         pdf.image(logo_path, x=10, y=8, w=33)
     except Exception:
-        pass  # Ignora se o logo não for encontrado
+        pass
 
     # Título
-    pdf.set_font('Arial', 'B', 18)
+    pdf.set_font(fonte_padrao, 'B', 18) # Usar a fonte padrão
     pdf.cell(0, 10, titulo, 0, 1, 'C')
     pdf.ln(10)
 
     # Subtítulo e data
-    pdf.set_font('Arial', 'I', 10)
+    pdf.set_font(fonte_padrao, '', 10) # Usar a fonte padrão
     data_geracao = datetime.now().strftime("%d/%m/%Y às %H:%M:%S")
     pdf.cell(0, 10, f'Relatório gerado em: {data_geracao}', 0, 1, 'C')
     pdf.ln(10)
 
     # Corpo do Relatório
-    pdf.set_font('Arial', '', 12)
-
+    pdf.set_font(fonte_padrao, '', 12) # Usar a fonte padrão
+    
     # Mapeamento de chaves para rótulos amigáveis
     mapa_rotulos = {
+        # Cálculo Quente
         "material": "Material Isolante",
         "tq": "Temperatura da Face Quente (°C)",
         "to": "Temperatura Ambiente (°C)",
@@ -48,32 +63,38 @@ def gerar_pdf_relatorio(titulo, dados_dict, logo_path="logo.png"):
         "eco_mensal": "Economia Mensal Estimada (R$)",
         "eco_anual": "Economia Anual Estimada (R$)",
         "co2_ton_ano": "Carbono Evitado (tCO₂e/ano)",
+        # Cálculo Frio
+        "ti": "Temperatura Interna (°C)",
+        "ta": "Temperatura Ambiente (°C)",
+        "ur": "Umidade Relativa do Ar (%)",
+        "vento": "Velocidade do Vento (m/s)",
+        "t_orvalho": "Temperatura de Orvalho (°C)",
+        "espessura_final": "Espessura Mínima Calculada (mm)"
     }
 
-    # Gera o relatório apenas para as chaves presentes no dicionário
-    for chave, rotulo in mapa_rotulos.items():
-        if chave in dados_dict:
-            valor = dados_dict[chave]
-            # Formatação especial para valores numéricos
-            if isinstance(valor, (int, float)):
-                if "eco_" in chave:
-                    valor_str = f"R$ {valor:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
-                elif "_pct" in chave:
-                    valor_str = f"{valor:.1f} %".replace('.', ',')
-                elif "_kw" in chave:
-                    valor_str = f"{valor:.3f}".replace('.', ',')
-                else:
-                    valor_str = f"{valor:.1f}".replace('.', ',')
+    for chave, valor in dados_dict.items():
+        rotulo = mapa_rotulos.get(chave, chave.replace('_', ' ').title())
+        
+        if isinstance(valor, (int, float)):
+            if "eco_" in chave:
+                valor_str = f"R$ {valor:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
+            elif "_pct" in chave or chave == "ur":
+                valor_str = f"{valor:.1f} %".replace('.',',')
+            elif "_kw" in chave:
+                valor_str = f"{valor:.3f}".replace('.',',')
             else:
-                valor_str = str(valor)
+                valor_str = f"{valor:.1f}".replace('.',',')
+        else:
+            valor_str = str(valor)
 
-            pdf.set_font('Arial', 'B', 12)
+        if rotulo:
+            pdf.set_font(fonte_padrao, 'B', 12) # Usar a fonte padrão
             pdf.cell(95, 10, f'{rotulo}:', 1, 0, 'L')
-            pdf.set_font('Arial', '', 12)
+            pdf.set_font(fonte_padrao, '', 12) # Usar a fonte padrão
             pdf.cell(95, 10, valor_str, 1, 1, 'R')
 
-    # Retorna o conteúdo do PDF como bytes
-    return pdf.output(dest='S').encode('latin-1')
+    # --- ALTERAÇÃO 2: A saída agora não precisa mais do encode('latin-1') ---
+    return pdf.output(dest='S')
 
 
 # --- FUNÇÃO DE INTEGRAÇÃO COM RD STATION ---
@@ -441,6 +462,7 @@ else:
             file_name=f"relatorio_termico_{time.strftime('%Y%m%d-%H%M%S')}.pdf",
             mime="application/pdf"
         )
+
 
 
 
