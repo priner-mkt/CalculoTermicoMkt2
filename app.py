@@ -232,7 +232,7 @@ else:
         st.error("Ocorreu um erro ao carregar os dados internos dos materiais isolantes.")
         st.stop()
 
-    st.header("🔥 Cálculo Térmico e Financeiro")
+    st.header("🔥 Simulação de Cálculo Térmico e Financeiro")
     st.subheader("Parâmetros do Isolamento Térmico")
         
     emissividade_fixa = 0.9
@@ -370,6 +370,7 @@ else:
     st.markdown("""
     > **Nota:** Os cálculos são realizados de acordo com as práticas recomendadas pelas normas **ASTM C680** e **ISO 12241**, em conformidade com os procedimentos da norma brasileira **ABNT NBR 16281**.
     """)
+
 
 
 
