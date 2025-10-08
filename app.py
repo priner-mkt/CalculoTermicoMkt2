@@ -473,6 +473,7 @@ st.markdown("""
 st.markdown("---")
 st.markdown("""
 Os cálculos apresentados por esta ferramenta têm caráter meramente estimativo, baseando-se em premissas técnicas padronizadas. Os resultados não representam garantia de desempenho, economia ou retorno financeiro efetivo, podendo variar conforme as condições reais de operação e aplicação.
+""")
 
 
 
