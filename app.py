@@ -469,7 +469,9 @@ else:
 st.markdown("---")
 st.markdown("""
 > **Nota:** Os cálculos são realizados de acordo com as práticas recomendadas pelas normas **ASTM C680** e **ISO 12241**, em conformidade com os procedimentos da norma brasileira **ABNT NBR 16281**.
+Os cálculos apresentados por esta ferramenta têm caráter meramente estimativo, baseando-se em premissas técnicas padronizadas. Os resultados não representam garantia de desempenho, economia ou retorno financeiro efetivo, podendo variar conforme as condições reais de operação e aplicação.
 """)
+
 
 
 
