@@ -110,11 +110,11 @@ def gerar_pdf_relatorio(dados):
     pdf.set_y(-50)
 
     # Define a fonte para a nota (menor e, opcionalmente, em cinza para destaque)
-    pdf.set_font(font_family, 'B', 12)
-    pdf.set_text_color(128, 128, 128) # Cor cinza
+    pdf.set_font(font_family, '', 12)
+    pdf.set_text_color(0, 0, 0) # Cor cinza
 
     nota_texto = (
-        "Aviso: Este relatório é uma estimativa baseada em normas "
+        "**Aviso:** Este relatório é uma estimativa baseada em normas "
         "técnicas de referência (ASTM C680, ISO 12241 e ABNT NBR 16281). Os resultados "
         "aqui apresentados não constituem garantia contratual e podem variar de acordo "
         "com condições reais de uso e instalação."
@@ -503,6 +503,7 @@ st.markdown("""
 st.markdown("""
 > **Aviso:** Os cálculos apresentados por esta ferramenta têm caráter meramente estimativo, baseando-se em premissas técnicas padronizadas. Os resultados não representam garantia de desempenho, economia ou retorno financeiro efetivo, podendo variar conforme as condições reais de operação e aplicação.
 """)
+
 
 
 
