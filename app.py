@@ -9,6 +9,15 @@ from datetime import datetime
 import os
 
 # --- FUNÇÃO DE GERAÇÃO DE PDF
+# É necessário importar as bibliotecas FPDF, os e datetime
+# pip install fpdf
+from fpdf import FPDF
+import os
+from datetime import datetime
+# A biblioteca Streamlit (st) é usada no seu código original para avisos
+# import streamlit as st 
+
+# --- FUNÇÃO DE GERAÇÃO DE PDF
 def gerar_pdf_relatorio(dados):
     """
     Gera um relatório em PDF formatado a partir dos dados da simulação.
@@ -32,7 +41,7 @@ def gerar_pdf_relatorio(dados):
         font_family = 'DejaVu'
     except RuntimeError:
         font_family = 'Arial'
-        st.warning("Fonte DejaVu não encontrada, o PDF usará a fonte padrão Arial.")
+        # st.warning("Fonte DejaVu não encontrada, o PDF usará a fonte padrão Arial.")
 
     # --- CABEÇALHO ---
     pdf.set_y(8) # Posiciona o cursor no topo
@@ -95,6 +104,27 @@ def gerar_pdf_relatorio(dados):
             f"Carbono Evitado: {co2_str}"
         )
         pdf.multi_cell(0, 6, texto_financeiro)
+
+    # --- NOTA DE RODAPÉ ---
+    # Posiciona o cursor a 30mm do final da página (valor negativo). Ajuste conforme necessário.
+    pdf.set_y(-30)
+
+    # Define a fonte para a nota (menor e, opcionalmente, em cinza para destaque)
+    pdf.set_font(font_family, '', 8)
+    pdf.set_text_color(128, 128, 128) # Cor cinza
+
+    nota_texto = (
+        "Este relatório é uma estimativa baseada em normas "
+        "técnicas de referência (ASTM C680, ISO 12241 e ABNT NBR 16281). Os resultados "
+        "aqui apresentados não constituem garantia contratual e podem variar de acordo "
+        "com condições reais de uso e instalação."
+    )
+
+    # Adiciona a nota como uma célula de múltiplas linhas e centralizada
+    pdf.multi_cell(0, 4, nota_texto, 0, 'C')
+
+    # Restaura a cor do texto para preto para qualquer elemento futuro (boa prática)
+    pdf.set_text_color(0, 0, 0)
 
     # Retorna os bytes do PDF para o botão de download
     return pdf.output(dest='S').encode('latin-1')
@@ -473,6 +503,7 @@ st.markdown("""
 st.markdown("""
 > **Aviso:** Os cálculos apresentados por esta ferramenta têm caráter meramente estimativo, baseando-se em premissas técnicas padronizadas. Os resultados não representam garantia de desempenho, economia ou retorno financeiro efetivo, podendo variar conforme as condições reais de operação e aplicação.
 """)
+
 
 
 
