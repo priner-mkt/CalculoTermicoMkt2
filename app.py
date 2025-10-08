@@ -107,10 +107,10 @@ def gerar_pdf_relatorio(dados):
 
     # --- NOTA DE RODAPÉ ---
     # Posiciona o cursor a 30mm do final da página (valor negativo). Ajuste conforme necessário.
-    pdf.set_y(-30)
+    pdf.set_y(-70)
 
     # Define a fonte para a nota (menor e, opcionalmente, em cinza para destaque)
-    pdf.set_font(font_family, '', 8)
+    pdf.set_font(font_family, '', 12)
     pdf.set_text_color(128, 128, 128) # Cor cinza
 
     nota_texto = (
@@ -503,6 +503,7 @@ st.markdown("""
 st.markdown("""
 > **Aviso:** Os cálculos apresentados por esta ferramenta têm caráter meramente estimativo, baseando-se em premissas técnicas padronizadas. Os resultados não representam garantia de desempenho, economia ou retorno financeiro efetivo, podendo variar conforme as condições reais de operação e aplicação.
 """)
+
 
 
 
