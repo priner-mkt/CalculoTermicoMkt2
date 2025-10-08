@@ -114,14 +114,14 @@ def gerar_pdf_relatorio(dados):
     pdf.set_text_color(128, 128, 128) # Cor cinza
 
     nota_texto = (
-        "Este relatório é uma estimativa baseada em normas "
+        "Aviso: Este relatório é uma estimativa baseada em normas "
         "técnicas de referência (ASTM C680, ISO 12241 e ABNT NBR 16281). Os resultados "
         "aqui apresentados não constituem garantia contratual e podem variar de acordo "
         "com condições reais de uso e instalação."
     )
 
     # Adiciona a nota como uma célula de múltiplas linhas e centralizada
-    pdf.multi_cell(0, 4, nota_texto, 0, 'J')
+    pdf.multi_cell(0, 5, nota_texto, 0, 'J')
 
     # Restaura a cor do texto para preto para qualquer elemento futuro (boa prática)
     pdf.set_text_color(0, 0, 0)
@@ -503,6 +503,7 @@ st.markdown("""
 st.markdown("""
 > **Aviso:** Os cálculos apresentados por esta ferramenta têm caráter meramente estimativo, baseando-se em premissas técnicas padronizadas. Os resultados não representam garantia de desempenho, economia ou retorno financeiro efetivo, podendo variar conforme as condições reais de operação e aplicação.
 """)
+
 
 
 
